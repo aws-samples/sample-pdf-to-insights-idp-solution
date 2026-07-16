@@ -1,0 +1,580 @@
+{
+  "Comment": "Event-Driven Document Processing Pipeline with Bedrock Data Automation",
+  "StartAt": "Initialize Execution",
+  "States": {
+    "Initialize Execution": {
+      "Type": "Pass",
+      "Parameters": {
+        "execution_id.$": "$$.Execution.Id",
+        "start_time.$": "$$.State.EnteredTime",
+        "bucket.$": "$.bucket",
+        "prefix.$": "$.prefix",
+        "project_arn.$": "$.project_arn"
+      },
+      "Next": "Process Documents"
+    },
+    "Process Documents": {
+      "Type": "Map",
+      "ItemReader": {
+        "Resource": "arn:aws:states:::s3:listObjectsV2",
+        "Parameters": {
+          "Bucket.$": "$.bucket",
+          "Prefix.$": "$.prefix"
+        }
+      },
+      "ItemSelector": {
+        "bucket.$": "$.bucket",
+        "key.$": "$$.Map.Item.Value.Key",
+        "size.$": "$$.Map.Item.Value.Size",
+        "execution_id.$": "$.execution_id",
+        "project_arn.$": "$.project_arn"
+      },
+      "MaxConcurrency": 1000,
+      "ToleratedFailurePercentage": 5,
+      "ResultSelector": {
+        "processed_files.$": "$[?(@.processing_result == 'SUCCESS' || @.processing_result == 'SKIPPED' || @.processing_result == 'ERROR')]"
+      },
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "Filter PDF Files",
+        "States": {
+          "Filter PDF Files": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "And": [
+                  {
+                    "Variable": "$.key",
+                    "StringMatches": "*.pdf"
+                  },
+                  {
+                    "Variable": "$.size",
+                    "NumericGreaterThan": 0
+                  }
+                ],
+                "Next": "Initialize Document"
+              }
+            ],
+            "Default": "Skip Non-PDF"
+          },
+          "Skip Non-PDF": {
+            "Type": "Pass",
+            "Parameters": {
+              "key.$": "$.key",
+              "processing_result": "SKIPPED",
+              "reason": "Not a PDF or zero size file"
+            },
+            "End": true
+          },
+          "Initialize Document": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:putItem",
+            "Parameters": {
+              "TableName": "BDAProcessingStatus",
+              "Item": {
+                "doc_id": {
+                  "S.$": "$.key"
+                },
+                "execution_id": {
+                  "S.$": "$.execution_id"
+                },
+                "bucket": {
+                  "S.$": "$.bucket"
+                },
+                "status": {
+                  "S": "INITIALIZING"
+                },
+                "start_time": {
+                  "S.$": "$$.State.EnteredTime"
+                }
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "ProvisionedThroughputExceededException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 5,
+                "BackoffRate": 2
+              }
+            ],
+            "ResultPath": null,
+            "Next": "Check No of Pages in Doc"
+          },
+          "Check No of Pages in Doc": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "arn:aws:lambda:us-west-2:274614053408:function:BDAPDFPageChecker:$LATEST",
+              "Payload": {
+                "bucket.$": "$.bucket",
+                "key.$": "$.key",
+                "execution_id.$": "$.execution_id"
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 3,
+                "BackoffRate": 2
+              }
+            ],
+            "ResultPath": "$.page_info_temp",
+            "ResultSelector": {
+              "page_count.$": "$.Payload.page_count"
+            },
+            "Catch": [
+              {
+                "ErrorEquals": ["States.ALL"],
+                "ResultPath": "$.lambda_error",
+                "Next": "Handle PDF Check Error"
+              }
+            ],
+            "Next": "Determine Page Type"
+          },
+          "Handle PDF Check Error": {
+            "Type": "Pass",
+            "Parameters": {
+              "page_count": 1,
+              "processing_type": "sync",
+              "api_method": "DetectDocumentText"
+            },
+            "ResultPath": "$.page_info_temp",
+            "Next": "Determine Page Type"
+          },
+          "Determine Page Type": {
+            "Type": "Choice",
+            "Choices": [
+              {
+                "Variable": "$.page_info_temp.page_count",
+                "NumericGreaterThan": 1,
+                "Next": "Set Multi Page Type"
+              }
+            ],
+            "Default": "Set Single Page Type"
+          },
+          "Set Multi Page Type": {
+            "Type": "Pass",
+            "Parameters": {
+              "bucket.$": "$.bucket",
+              "key.$": "$.key",
+              "size.$": "$.size",
+              "execution_id.$": "$.execution_id",
+              "project_arn.$": "$.project_arn",
+              "page_info": {
+                "page_count.$": "$.page_info_temp.page_count",
+                "doc_type": "multi-page"
+              }
+            },
+            "Next": "Update Page Info"
+          },
+          "Set Single Page Type": {
+            "Type": "Pass",
+            "Parameters": {
+              "bucket.$": "$.bucket",
+              "key.$": "$.key",
+              "size.$": "$.size",
+              "execution_id.$": "$.execution_id",
+              "project_arn.$": "$.project_arn",
+              "page_info": {
+                "page_count.$": "$.page_info_temp.page_count",
+                "doc_type": "single"
+              }
+            },
+            "Next": "Update Page Info"
+          },
+          "Update Page Info": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+              "TableName": "BDAProcessingStatus",
+              "Key": {
+                "doc_id": {
+                  "S.$": "$.key"
+                }
+              },
+              "UpdateExpression": "SET page_count = :pageCount, doc_type = :docType, #status = :status, initialization_time = :initTime",
+              "ExpressionAttributeNames": {
+                "#status": "status"
+              },
+              "ExpressionAttributeValues": {
+                ":pageCount": {
+                  "N.$": "States.JsonToString($.page_info.page_count)"
+                },
+                ":docType": {
+                  "S.$": "$.page_info.doc_type"
+                },
+                ":status": {
+                  "S": "PROCESSING"
+                },
+                ":initTime": {
+                  "S.$": "$$.State.EnteredTime"
+                }
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "ProvisionedThroughputExceededException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 5,
+                "BackoffRate": 2
+              }
+            ],
+            "ResultPath": null,
+            "Next": "Start Bedrock Data Automation Async Job"
+          },
+          "Start Bedrock Data Automation Async Job": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::aws-sdk:bedrockdataautomationruntime:invokeDataAutomationAsync",
+            "Parameters": {
+              "DataAutomationProfileArn": "arn:aws:bedrock:us-west-2:274614053408:data-automation-profile/us.data-automation-v1",
+              "DataAutomationConfiguration": {
+                "DataAutomationProjectArn.$": "$.project_arn",
+                "Stage": "LIVE"
+              },
+              "NotificationConfiguration": {
+                "EventBridgeConfiguration": {
+                  "EventBridgeEnabled": true
+                }
+              },
+              "InputConfiguration": {
+                "S3Uri.$": "States.Format('s3://{}/{}', $.bucket, $.key)"
+              },
+              "OutputConfiguration": {
+                "S3Uri.$": "States.Format('s3://{}/BDA-Output/', $.bucket)"
+              }
+            },
+            "ResultPath": "$.bda_job",
+            "ResultSelector": {
+              "invocation_arn.$": "$.InvocationArn"
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "ThrottlingException",
+                  "ServiceUnavailableException",
+                  "LimitExceededException",
+                  "States.TaskFailed"
+                ],
+                "IntervalSeconds": 2,
+                "MaxAttempts": 3,
+                "BackoffRate": 2
+              }
+            ],
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "ResultPath": "$.error",
+                "Next": "Log API Error Details"
+              }
+            ],
+            "Next": "Record BDA Start Time"
+          },
+          "Record BDA Start Time": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+              "TableName": "BDAProcessingStatus",
+              "Key": {
+                "doc_id": {
+                  "S.$": "$.key"
+                }
+              },
+              "UpdateExpression": "SET bda_start_time = :startTime",
+              "ExpressionAttributeValues": {
+                ":startTime": {
+                  "S.$": "$$.State.EnteredTime"
+                }
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "ProvisionedThroughputExceededException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 5,
+                "BackoffRate": 2
+              }
+            ],
+            "ResultPath": null,
+            "Next": "Store Task Token and Await BDA Completion"
+          },
+          "Log API Error Details": {
+            "Type": "Pass",
+            "Parameters": {
+              "key.$": "$.key",
+              "bucket.$": "$.bucket",
+              "execution_id.$": "$.execution_id",
+              "error.$": "$.error",
+              "processing_result": "ERROR",
+              "error_time.$": "$$.State.EnteredTime"
+            },
+            "Next": "Record Error"
+          },
+          "Store Task Token and Await BDA Completion": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::aws-sdk:dynamodb:updateItem.waitForTaskToken",
+            "Parameters": {
+              "TableName": "BDAProcessingStatus",
+              "Key": {
+                "doc_id": {
+                  "S.$": "$.key"
+                }
+              },
+              "UpdateExpression": "SET invocation_arn = :invocArn, task_token = :taskToken, #status = :status",
+              "ExpressionAttributeNames": {
+                "#status": "status"
+              },
+              "ExpressionAttributeValues": {
+                ":invocArn": {
+                  "S.$": "$.bda_job.invocation_arn"
+                },
+                ":taskToken": {
+                  "S.$": "$$.Task.Token"
+                },
+                ":status": {
+                  "S": "PROCESSING"
+                }
+              }
+            },
+            "ResultPath": "$.callback_result",
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.Timeout"
+                ],
+                "ResultPath": "$.error",
+                "Next": "Handle Timeout"
+              }
+            ],
+            "Next": "Process EventBridge Results"
+          },
+          "Handle Timeout": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+              "TableName": "BDAProcessingStatus",
+              "Key": {
+                "doc_id": {
+                  "S.$": "$.key"
+                }
+              },
+              "UpdateExpression": "SET #status = :status, error_details = :error, completed_time = :timestamp",
+              "ExpressionAttributeNames": {
+                "#status": "status"
+              },
+              "ExpressionAttributeValues": {
+                ":status": {
+                  "S": "TIMEOUT"
+                },
+                ":error": {
+                  "S": "Task token timed out waiting for BDA completion"
+                },
+                ":timestamp": {
+                  "S.$": "$$.State.EnteredTime"
+                }
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "ProvisionedThroughputExceededException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 5,
+                "BackoffRate": 2
+              }
+            ],
+            "Next": "Return Timeout Result"
+          },
+          "Return Timeout Result": {
+            "Type": "Pass",
+            "Parameters": {
+              "key.$": "$.key",
+              "bucket.$": "$.bucket",
+              "execution_id.$": "$.execution_id",
+              "processing_result": "ERROR",
+              "reason": "Timeout waiting for BDA job completion",
+              "error_time.$": "$$.State.EnteredTime"
+            },
+            "End": true
+          },
+          "Process EventBridge Results": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::lambda:invoke",
+            "Parameters": {
+              "FunctionName": "arn:aws:lambda:us-west-2:274614053408:function:BDAResultProcessor:$LATEST",
+              "Payload": {
+                "document": {
+                  "bucket.$": "$.bucket",
+                  "key.$": "$.key"
+                },
+                "output_location.$": "$.callback_result.output_location",
+                "execution_id.$": "$.execution_id",
+                "invocation_arn.$": "$.bda_job.invocation_arn"
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "Lambda.ServiceException",
+                  "Lambda.TooManyRequestsException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 3,
+                "BackoffRate": 2
+              }
+            ],
+            "Catch": [
+              {
+                "ErrorEquals": [
+                  "States.ALL"
+                ],
+                "ResultPath": "$.error",
+                "Next": "Record Error"
+              }
+            ],
+            "ResultPath": "$.processing_details",
+            "ResultSelector": {
+              "lambda_result.$": "$.Payload"
+            },
+            "Next": "Record Success"
+          },
+          "Record Success": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+              "TableName": "BDAProcessingStatus",
+              "Key": {
+                "doc_id": {
+                  "S.$": "$.key"
+                }
+              },
+              "UpdateExpression": "SET #status = :status, completed_time = :timestamp, output_location = :outputLocation",
+              "ExpressionAttributeNames": {
+                "#status": "status"
+              },
+              "ExpressionAttributeValues": {
+                ":status": {
+                  "S": "COMPLETED"
+                },
+                ":timestamp": {
+                  "S.$": "$$.State.EnteredTime"
+                },
+                ":outputLocation": {
+                  "S.$": "$.callback_result.output_location"
+                }
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "ProvisionedThroughputExceededException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 5,
+                "BackoffRate": 2
+              }
+            ],
+            "ResultPath": null,
+            "Next": "Return Clean Result"
+          },
+          "Return Clean Result": {
+            "Type": "Pass",
+            "Parameters": {
+              "key.$": "$.key",
+              "bucket.$": "$.bucket",
+              "execution_id.$": "$.execution_id",
+              "page_count.$": "$.page_info.page_count",
+              "doc_type.$": "$.page_info.doc_type",
+              "output_location.$": "$.callback_result.output_location",
+              "processing_result": "SUCCESS",
+              "completed_time.$": "$$.State.EnteredTime"
+            },
+            "End": true,
+            "Comment": "Remove SDK metadata"
+          },
+          "Record Error": {
+            "Type": "Task",
+            "Resource": "arn:aws:states:::dynamodb:updateItem",
+            "Parameters": {
+              "TableName": "BDAProcessingStatus",
+              "Key": {
+                "doc_id": {
+                  "S.$": "$.key"
+                }
+              },
+              "UpdateExpression": "SET #status = :status, error_details = :error, completed_time = :timestamp",
+              "ExpressionAttributeNames": {
+                "#status": "status"
+              },
+              "ExpressionAttributeValues": {
+                ":status": {
+                  "S": "ERROR"
+                },
+                ":error": {
+                  "S.$": "States.JsonToString($.error)"
+                },
+                ":timestamp": {
+                  "S.$": "$$.State.EnteredTime"
+                }
+              }
+            },
+            "Retry": [
+              {
+                "ErrorEquals": [
+                  "ProvisionedThroughputExceededException"
+                ],
+                "IntervalSeconds": 1,
+                "MaxAttempts": 5,
+                "BackoffRate": 2
+              }
+            ],
+            "ResultPath": null,
+            "Next": "Return Error Result"
+          },
+          "Return Error Result": {
+            "Type": "Pass",
+            "Parameters": {
+              "key.$": "$.key",
+              "bucket.$": "$.bucket",
+              "execution_id.$": "$.execution_id",
+              "error.$": "$.error",
+              "processing_result": "ERROR",
+              "error_time.$": "$$.State.EnteredTime"
+            },
+            "End": true
+          }
+        }
+      },
+      "ResultPath": "$.processed_documents",
+      "Next": "Summarize Results"
+    },
+    "Summarize Results": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Parameters": {
+        "FunctionName": "arn:aws:lambda:us-west-2:274614053408:function:BDAResultSummary:$LATEST",
+        "Payload": {
+          "execution_id.$": "$.execution_id",
+          "start_time.$": "$.start_time",
+          "processed_documents.$": "$.processed_documents.processed_files"
+        }
+      },
+      "End": true
+    }
+  }
+}

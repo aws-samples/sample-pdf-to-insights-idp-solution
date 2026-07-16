@@ -1,0 +1,197 @@
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/assets/*
+dist/index.html
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.envrc
+
+# CDK
+.cdk.staging/
+cdk.out/
+cdk.context.json
+
+# Node.js (for UI dashboard)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.eslintcache
+.node_repl_history
+*.tgz
+.yarn-integrity
+.parcel-cache/
+
+# UI Dashboard build artifacts
+bda-ui-dashboard/dist/assets/*
+bda-ui-dashboard/dist/index.html
+bda-ui-dashboard/node_modules/
+bda-ui-dashboard/.cache/
+bda-ui-dashboard/coverage/
+
+# Cloudscape UI
+bda-cloudscape-ui/.env
+bda-cloudscape-ui/dist/assets/*
+bda-cloudscape-ui/dist/index.html
+bda-cloudscape-ui/public/config.json
+bda-cloudscape-ui/node_modules/
+
+# AWS
+.aws/
+aws.config
+aws.credentials
+*.pem
+
+# Lambda layers (built dependencies)
+lambda_layers/*/python/
+lambda_layers/*/nodejs/
+lambda_layers/**/site-packages/
+lambda_layers/**/node_modules/
+lambda_layers/**/*.zip
+!lambda_layers/*/requirements.txt
+
+# Logs and temporary files
+*.log
+logs/
+deployment.log
+*.tmp
+*.bak
+*.swp
+*~
+.DS_Store
+*.DS_Store
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# Generated configuration files (created from templates during deployment)
+agentcore/runtime_config.json
+.bedrock_agentcore.yaml
+.classpath
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Backup files
+*.orig
+*.rej
+
+# Local configuration files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+config.local.json
+cdk-params.local.json
+
+# Environment-specific files with real AWS values (NEVER commit these!)
+bda-cloudscape-ui/.env
+bda-cloudscape-ui/.env.*
+!bda-cloudscape-ui/.env.template
+cdk-params.json
+!cdk-params.json.template
+
+# Generated documentation with hardcoded values (from debugging sessions)
+*_FIX*.md
+*_SUMMARY*.md
+*FIX_README*.md
+*GUIDE*.md
+TESTING_GUIDE.md
+BACKEND_INTEGRATION_FIX.md
+AUTHENTICATION_FIX_README.md
+FINAL_SUMMARY.md
+README_DEPLOYMENT.md
+CLAUDE.md
+check_mfa_status.sh
+diagnose-cognito.sh
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+test-results/
+coverage/
+
+# Documentation build
+docs/_build/
+site/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Package files
+*.tar.gz
+*.zip
+*.rar
+
+# Build artifacts and deployment files
+api-outputs.json
+deployment.log
+cdk-params.json
+status_handler.zip
+process_handler.zip
+Lambda/**/*.zip
+
+# Local scripts and utilities (keep requirements.txt files)
+quick-fix-script.py
+bda-metada-converter.py
+
+# Keep important project files (explicitly not ignored)
+# requirements.txt files are kept
+# lambda_layers/*/requirements.txt are kept
+# All source code in Lambda/ directory is kept
+# All CDK stack definitions in bda_stacks/ are kept
+# Configuration files like cdk.json, app.py are kept
+
+.ash
+.ash/*
+
+# Local environment files
+.env

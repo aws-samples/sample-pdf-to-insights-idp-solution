@@ -1,0 +1,34 @@
+# Minimal requirements for AgentCore Runtime with Strands Agents
+
+# Core AWS SDK
+boto3>=1.34.0
+
+# Strands Agents Framework (includes most dependencies)
+strands-agents>=1.4.0
+
+# Web framework for AgentCore endpoints
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+
+# External API agent dependency
+requests>=2.31.0
+aiohttp>=3.9.0
+
+# Data analysis and scientific computing for V2 agents
+numpy>=1.24.0
+pandas>=2.0.0
+scipy>=1.10.0
+
+# AWS OpenTelemetry for CloudWatch observability
+aws-opentelemetry-distro>=0.10.0
+
+# Additional dependencies for enhanced real data processing
+# MCP client for web search capabilities (when available)
+# anthropic-sdk>=1.0.0
+
+# JSON handling and text processing
+json5>=0.9.0
+regex>=2023.0.0
+
+# For financial calculations and data analysis
+python-dateutil>=2.8.0

@@ -1,0 +1,10 @@
+pypdf==4.0.1
+requests==2.31.0
+requests-aws4auth==1.2.3
+boto3>=1.36.0
+aws-lambda-powertools>=3.6.0
+chardet>=5.2.0
+charset-normalizer>=3.3.0
+idna>=3.4
+urllib3>=1.26.0
+certifi>=2023.0.0

@@ -1,0 +1,88 @@
+{}
+  "_comment": "checkov:skip=CKV_OPENAPI_5:This is an internal schema for Bedrock agents, security is handled at the agent level",
+  "openapi": "3.0.0",
+  "info": {
+    "title": "External Financial API Actions",
+    "version": "1.0.0",
+    "description": "Schema for External Financial API interactions"
+  },
+  "paths": {
+    "/getMarketData": {
+      "get": {
+        "operationId": "getMarketData",
+        "summary": "Get current market data for a stock symbol",
+        "description": "Retrieves current price, change, and volume information for a specified stock symbol",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "description": "Stock symbol (e.g., AAPL, MSFT, AMZN)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {"type": "string"},
+                    "price": {"type": "number"},
+                    "change": {"type": "number"},
+                    "change_percent": {"type": "number"},
+                    "volume": {"type": "integer"},
+                    "timestamp": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/getCompanyProfile": {
+      "get": {
+        "operationId": "getCompanyProfile",
+        "summary": "Get detailed company profile and fundamental data",
+        "description": "Retrieves company information, fundamental metrics, and key financial indicators",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "description": "Stock symbol (e.g., AAPL, MSFT, AMZN)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "symbol": {"type": "string"},
+                    "company_name": {"type": "string"},
+                    "sector": {"type": "string"},
+                    "industry": {"type": "string"},
+                    "market_cap": {"type": "number"},
+                    "pe_ratio": {"type": "number"},
+                    "dividend_yield": {"type": "number"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

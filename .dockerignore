@@ -1,0 +1,97 @@
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Python cache
+__pycache__/
+__pycache__*
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+.env
+venv/
+env/
+ENV/
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage*
+htmlcov/
+.tox/
+*.cover
+.hypothesis/
+.mypy_cache/
+.ruff_cache/
+
+# Development
+*.log
+*.bak
+*.swp
+*.swo
+*~
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+
+# Version control
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Project specific
+tests/
+
+# Bedrock AgentCore specific - keep config but exclude runtime files
+.bedrock_agentcore.yaml
+.dockerignore
+
+# Large directories that slow down Docker build context
+node_modules/
+bda-cloudscape-ui/node_modules/
+bda-cloudscape-ui/dist/
+bda-ui-dashboard/node_modules/
+bda-ui-dashboard/dist/
+
+# CDK build artifacts
+cdk.out/
+.cdk.staging/
+cdk.context.json
+
+# Lambda layers (built packages, not needed in Docker images)
+lambda_layers/*/python/
+lambda_layers/*/nodejs/
+lambda_layers/**/*.zip
+
+# Deployment scripts and logs
+deployment.log
+logs/
+scripts/cleanup.sh
+deploy.sh
+
+# AWS credentials (NEVER in Docker images)
+.aws/
+aws.config
+aws.credentials
+*.pem
+
+# Keep wheelhouse for offline installations
+# wheelhouse/

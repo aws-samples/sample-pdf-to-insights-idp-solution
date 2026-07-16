@@ -1,0 +1,526 @@
+/* Modern Login Page Styles */
+.loginPage {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 25%, #e0e7ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.loginCard {
+  width: 100%;
+  max-width: 400px;
+  position: relative;
+  animation: slideInUp 0.6s ease-out;
+}
+
+/* Logo and Brand Section */
+.logoSection {
+  text-align: center;
+  margin-bottom: 2rem;
+  position: relative;
+}
+
+.logoIcon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.logoIcon:hover {
+  transform: scale(1.05);
+}
+
+.brandTitle {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.5rem;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.brandSubtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* Form Card */
+.formCard {
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+/* Tab Container */
+.tabContainer {
+  display: flex;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.tab {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 1rem;
+  position: relative;
+}
+
+.tab:hover {
+  color: #374151;
+  background-color: #f9fafb;
+}
+
+.activeTab {
+  color: #2563eb !important;
+  background-color: #eff6ff !important;
+  border-bottom: 2px solid #2563eb;
+}
+
+/* Form Styles */
+.form {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.formSection {
+  margin-top: 1rem;
+}
+
+/* Input Styles */
+.inputContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.inputWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem 0.75rem 0.75rem 2.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  background: white;
+  outline: none;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.input::placeholder {
+  color: #9ca3af;
+}
+
+.input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  transform: translateY(-1px);
+}
+
+.inputIcon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  width: 1.25rem;
+  height: 1.25rem;
+  transition: color 0.2s;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.inputWrapper:focus-within .inputIcon {
+  color: #2563eb;
+}
+
+.inputError .input {
+  border-color: #ef4444;
+}
+
+.inputError .input:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.inputError .inputIcon {
+  color: #ef4444;
+}
+
+/* Password Toggle */
+.passwordToggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  transition: color 0.2s;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passwordToggle:hover {
+  color: #6b7280;
+}
+
+.passwordIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Error Messages */
+.errorMessage {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #ef4444;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.errorIcon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+/* Checkbox Styles */
+.checkboxContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.rememberSection {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 0.5rem;
+}
+
+.termsLabel {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  gap: 0.5rem;
+}
+
+.hiddenCheckbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.customCheckbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #d1d5db;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.customCheckbox:hover {
+  border-color: #9ca3af;
+}
+
+.checked {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+.checkIcon {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: white;
+}
+
+.checkboxText {
+  color: #374151;
+  font-size: 0.875rem;
+  user-select: none;
+}
+
+.termsText {
+  color: #374151;
+  font-size: 0.875rem;
+  user-select: none;
+  line-height: 1.4;
+}
+
+.forgotLink, .link {
+  color: #2563eb;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.forgotLink:hover, .link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+}
+
+/* Submit Button */
+.submitButton {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.submitButton:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.submitButton:active {
+  transform: translateY(0);
+}
+
+.loadingButton {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.loadingButton:hover {
+  background: #9ca3af;
+  transform: none;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.buttonIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.footerText {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+}
+
+.switchButton {
+  color: #2563eb;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: color 0.2s;
+}
+
+.switchButton:hover {
+  color: #1d4ed8;
+}
+
+.securityText {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+/* Info Alert */
+.infoAlert {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.infoAlert p {
+  color: #1e40af;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-2px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(2px);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .loginPage {
+    padding: 1rem;
+  }
+
+  .loginCard {
+    max-width: 100%;
+  }
+
+  .logoIcon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .brandTitle {
+    font-size: 1.5rem;
+  }
+
+  .logoSection {
+    margin-bottom: 1.5rem;
+  }
+
+  .form {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .form {
+    padding: 1rem;
+  }
+
+  .logoIcon {
+    width: 50px;
+    height: 50px;
+  }
+
+  .brandTitle {
+    font-size: 1.25rem;
+  }
+
+  .logoSection {
+    margin-bottom: 1rem;
+  }
+
+  .tab {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .formCard {
+    background: white;
+    border: 2px solid black;
+  }
+
+  .logoIcon {
+    background: black;
+    color: white;
+  }
+
+  .input {
+    border: 2px solid black;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .loginCard,
+  .logoIcon,
+  .submitButton,
+  .spinner {
+    animation: none !important;
+  }
+
+  .input:focus,
+  .submitButton:hover {
+    transform: none;
+  }
+}

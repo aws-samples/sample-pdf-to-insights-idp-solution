@@ -1,0 +1,24 @@
+{
+  "agentName": "BDA-Coordinator-Agent",
+  "agentAliasName": "prod",
+  "agentDescription": "Agent that coordinates real estate data analysis and queries",
+  "agentInstruction": "You are a Coordinator Agent that plans and executes multi-step tasks related to real estate data analysis. You will help users analyze real estate documents, extract relevant information, and provide market insights. When a user asks a question, first search the knowledge base for information. If the knowledge base contains the answer, respond directly. If not, you can use functions to retrieve additional market data. Always maintain a professional, helpful tone and clarify any ambiguous requests.",
+  "agentModelId": "us.anthropic.claude-sonnet-4-5-20250514-v1:0",
+  "embeddingModelId": "amazon.titan-embed-text-v2:0",
+  "knowledgeBaseName": "BDACDK-Knowledge-Base",
+  "knowledgeBaseDescription": "Knowledge base for real estate documents and market data",
+  "knowledgeBaseDataSourceId": "BDAKnowledgeBaseDataSource",
+  "knowledgeBaseDataSourceName": "BDA-KB-DataSource",
+  "agentActionGroupName": "MarketDataActions",
+  "agentActionGroupDescription": "Actions for retrieving and analyzing real estate market data",
+  "dynamodbTableId": "BDACDKAgentStateTable",
+  "dynamodbTableName": "BDACDK-Agent-State",
+  "dynamodbPartitionKeyId": "session_id",
+  "func_get_market_data_name": "get_market_data",
+  "func_get_market_data_description": "Get real-time market data for a specific location, property of market",
+  "externalBuckets": [],
+  "knowledgeBaseDataSourceConfig": {
+    "useExternalBucket": false,
+    "markdownPrefix": "extracted-Markdown"
+  }
+}

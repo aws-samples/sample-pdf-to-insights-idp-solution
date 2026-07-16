@@ -1,0 +1,40 @@
+{
+    "Comment": "Parent State Machine for Parallel Folder Processing",
+    "StartAt": "Process Folders in Parallel",
+    "States": {
+      "Process Folders in Parallel": {
+        "Type": "Map",
+        "ItemsPath": "$.executions",
+        "Parameters": {
+          "execution.$": "$$.Map.Item.Value",
+          "project_arn.$": "$.project_arn"
+        },
+        "ResultSelector": {
+          "executions.$": "$[*].Output.Payload"
+        },
+        "ItemProcessor": {
+          "ProcessorConfig": {
+            "Mode": "DISTRIBUTED",
+            "ExecutionType": "STANDARD"
+          },
+          "StartAt": "BDAChildStateMachine",
+          "States": {
+            "BDAChildStateMachine": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::states:startExecution.sync:2",
+              "Parameters": {
+                "StateMachineArn": "arn:aws:states:us-west-2:274614053408:stateMachine:BDAChildStateMachine",
+                "Input": {
+                  "bucket.$": "$.execution.bucket",
+                  "prefix.$": "$.execution.prefix",
+                  "project_arn.$": "$.project_arn"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        "End": true
+      }
+    }
+  }

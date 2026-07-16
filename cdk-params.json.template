@@ -1,0 +1,7 @@
+{
+  "environment": "Dev",
+  "version": "v1",
+  "region": "REPLACE_WITH_YOUR_REGION",
+  "account": "REPLACE_WITH_YOUR_ACCOUNT_ID",
+  "description": "Configuration template for CDK deployment. Copy to cdk-params.json and update values."
+}

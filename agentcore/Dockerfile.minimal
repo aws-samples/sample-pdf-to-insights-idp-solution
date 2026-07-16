@@ -1,0 +1,97 @@
+# Minimal AgentCore Dockerfile with real agent implementation
+# Uses strands-agents package which includes most dependencies
+# ARM64 architecture required for AgentCore
+
+FROM public.ecr.aws/docker/library/python:3.11-slim
+
+# Build arguments for agent type and runtime ID
+ARG AGENT_TYPE=coordinator
+ARG RUNTIME_ID=unknown
+ENV AGENT_TYPE=${AGENT_TYPE}
+ENV RUNTIME_ID=${RUNTIME_ID}
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy minimal requirements and install
+COPY agentcore/requirements-minimal.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the entire strands_agents_v2 directory with agent implementations
+COPY strands_agents_v2/ ./strands_agents_v2/
+
+# Copy the assets directory (required by investment_advisory and external_api agents)
+COPY assets/ ./assets/
+
+# Copy the BDA stacks config for agent configuration
+COPY bda_stacks/config.json ./bda_stacks/
+
+# Copy the real handler and CloudWatch handler
+COPY agentcore/runtime/real_agentcore_handler.py ./agentcore/runtime/
+COPY agentcore/runtime/cloudwatch_handler.py ./agentcore/runtime/
+COPY agentcore/runtime/__init__.py ./agentcore/runtime/
+
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV LOG_LEVEL=INFO
+ENV PYTHONUNBUFFERED=1
+
+# Environment variables that should be set at runtime:
+# AWS_DEFAULT_REGION - AWS region for API calls
+# BEDROCK_REGION - Bedrock service region
+# KNOWLEDGE_BASE_ID - Knowledge base identifier
+# ALPHA_VANTAGE_API_KEY - Stock market data API key
+# CMC_API_KEY - Cryptocurrency data API key  
+# FRED_API_KEY - Economic data API key
+# NEWS_API_KEY - Market news API key
+# INVESTMENT_ADVISORY_MODEL_ID - Model for investment advisory agent
+
+# OpenTelemetry configuration for CloudWatch observability (AWS recommended)
+ENV AGENT_OBSERVABILITY_ENABLED=true
+ENV OTEL_PYTHON_DISTRO=aws_distro
+ENV OTEL_PYTHON_CONFIGURATOR=aws_configurator
+ENV OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
+# Using OTLP exporter for AgentCore (standard OpenTelemetry protocol)
+ENV OTEL_TRACES_EXPORTER=otlp
+ENV OTEL_METRICS_EXPORTER=otlp
+ENV OTEL_LOGS_EXPORTER=none
+# OTLP endpoint configuration (default for AWS Distro)
+ENV OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317
+ENV OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+# Service configuration
+ENV OTEL_PYTHON_LOG_LEVEL=ERROR
+ENV OTEL_SERVICE_NAME=${AGENT_TYPE}
+ENV OTEL_RESOURCE_ATTRIBUTES="service.name=${AGENT_TYPE},service.namespace=agentcore,service.version=2.0.0"
+ENV OTEL_TRACES_SAMPLER=traceidratio
+ENV OTEL_TRACES_SAMPLER_ARG=0.1
+
+# Streaming configuration
+ENV STREAMING_ENABLED=true
+ENV STREAMING_BUFFER_SIZE=1024
+ENV STREAMING_TIMEOUT_SECONDS=300
+
+# Enhanced observability configuration
+ENV CLOUDWATCH_LOG_RETENTION_DAYS=30
+ENV METRICS_ENABLED=true
+ENV ENVIRONMENT=production
+
+# Create non-root user for security
+RUN useradd --create-home --shell /bin/bash agentcore && \
+    chown -R agentcore:agentcore /app
+
+USER agentcore
+
+# Expose port 8080 (required by AgentCore)
+EXPOSE 8080
+
+# Health check endpoint
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8080/ping || exit 1
+
+# Run the real AgentCore handler with OpenTelemetry instrumentation for CloudWatch
+CMD ["opentelemetry-instrument", "uvicorn", "agentcore.runtime.real_agentcore_handler:app", "--host", "0.0.0.0", "--port", "8080", "--log-level", "info", "--access-log"]

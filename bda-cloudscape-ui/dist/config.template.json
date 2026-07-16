@@ -1,0 +1,23 @@
+{
+  "region": "{{AWS_REGION}}",
+  "cognito": {
+    "userPoolId": "{{USER_POOL_ID}}",
+    "userPoolClientId": "{{USER_POOL_CLIENT_ID}}",
+    "identityPoolId": "{{IDENTITY_POOL_ID}}"
+  },
+  "s3": {
+    "bucket": "{{S3_BUCKET}}"
+  },
+  "dynamodb": {
+    "processingStatusTable": "{{PROCESSING_STATUS_TABLE}}",
+    "metricsTable": "{{METRICS_TABLE}}"
+  },
+  "agentCore": {
+    "runtimeArn": "{{AGENTCORE_RUNTIME_ARN}}"
+  },
+  "knowledgeBase": {
+    "id": "{{KNOWLEDGE_BASE_ID}}",
+    "dataSourceId": "{{KNOWLEDGE_BASE_DATA_SOURCE_ID}}",
+    "name": "{{KNOWLEDGE_BASE_NAME}}"
+  }
+}
