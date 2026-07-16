@@ -1,4 +1,4 @@
-pypdf==4.0.1
+pypdf==6.13.3
 requests==2.31.0
 requests-aws4auth==1.2.3
 boto3>=1.36.0
